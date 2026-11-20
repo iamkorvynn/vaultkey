@@ -1,5 +1,7 @@
 # VaultKey — Offline Password Manager
 
+[![VaultKey CI](https://github.com/iamkorvynn/vaultkey/actions/workflows/flutter-ci.yml/badge.svg)](https://github.com/iamkorvynn/vaultkey/actions/workflows/flutter-ci.yml)
+
 **VaultKey** is a fully offline password manager for Android, built with
 Flutter. Everything stays on your device: no account, no cloud, no network
 calls, no tracking.
