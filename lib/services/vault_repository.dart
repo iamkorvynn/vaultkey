@@ -29,6 +29,31 @@ class VaultRepository {
     return crypto;
   }
 
+  /// Creates the entries table + indexes. Shared by the onCreate hook
+  /// and by tests that open an in-memory database.
+  static Future<void> createSchema(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableName (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        username_enc TEXT NOT NULL,
+        password_enc TEXT NOT NULL,
+        url TEXT NOT NULL DEFAULT '',
+        notes_enc TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'Other',
+        favorite INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX idx_entries_title ON $tableName(title)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_entries_category ON $tableName(category)',
+    );
+  }
+
   Future<Database> get _db async {
     final existing = _database;
     if (existing != null) return existing;
@@ -36,28 +61,7 @@ class VaultRepository {
     final opened = await openDatabase(
       path,
       version: databaseVersion,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE $tableName (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            username_enc TEXT NOT NULL,
-            password_enc TEXT NOT NULL,
-            url TEXT NOT NULL DEFAULT '',
-            notes_enc TEXT NOT NULL DEFAULT '',
-            category TEXT NOT NULL DEFAULT 'Other',
-            favorite INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL
-          )
-        ''');
-        await db.execute(
-          'CREATE INDEX idx_entries_title ON $tableName(title)',
-        );
-        await db.execute(
-          'CREATE INDEX idx_entries_category ON $tableName(category)',
-        );
-      },
+      onCreate: (db, version) async => createSchema(db),
     );
     _database = opened;
     return opened;
