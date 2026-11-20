@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../services/secure_store.dart';
 import '../services/vault_service.dart';
-import 'lock_screen.dart';
+import 'setup_screen.dart';
 
 /// Settings: auto-lock timeout, biometric toggle, change master password,
 /// vault stats, and erase vault.
@@ -173,9 +173,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await widget.vaultService.eraseVault();
     await _store.deleteAll();
     if (!mounted) return;
+    // Setup was wiped, so the app must start over at first-run setup.
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
-        builder: (_) => LockScreen(vaultService: widget.vaultService),
+        builder: (_) => SetupScreen(vaultService: widget.vaultService),
       ),
       (_) => false,
     );
