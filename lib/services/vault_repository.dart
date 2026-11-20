@@ -146,3 +146,44 @@ class VaultRepository {
   Future<void> setFavorite(VaultEntry entry, bool favorite) async {
     await update(entry.copyWith(isFavorite: favorite));
   }
+
+  /// Searches entries by title/username/url (case-insensitive substring).
+  /// The username match is done after decrypting, so search stays correct
+  /// even though usernames are stored encrypted.
+  Future<List<VaultEntry>> search(String query) async {
+    final all = await getAll();
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return all;
+    return all.where((entry) {
+      return entry.title.toLowerCase().contains(needle) ||
+          entry.username.toLowerCase().contains(needle) ||
+          entry.url.toLowerCase().contains(needle);
+    }).toList();
+  }
+
+  /// Returns entries in [category] (or all entries when null).
+  Future<List<VaultEntry>> byCategory(String? category) async {
+    final all = await getAll();
+    if (category == null) return all;
+    return all.where((entry) => entry.category == category).toList();
+  }
+
+  /// Number of entries in the vault.
+  Future<int> count() async {
+    final db = await _db;
+    final rows = await db.rawQuery('SELECT COUNT(*) AS n FROM $tableName');
+    return (rows.first['n'] as int?) ?? 0;
+  }
+
+  /// Deletes every entry. Used by "erase vault" in settings.
+  Future<void> deleteAll() async {
+    final db = await _db;
+    await db.delete(tableName);
+  }
+
+  /// Closes the database connection.
+  Future<void> close() async {
+    await _database?.close();
+    _database = null;
+  }
+}
