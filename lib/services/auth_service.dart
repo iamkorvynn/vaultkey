@@ -63,3 +63,62 @@ class AuthService {
     _crypto = CryptoService(key);
     return null;
   }
+
+  /// Verifies [password] against the stored verifier.
+  /// Returns the [CryptoService] on success, null on failure.
+  /// Counts failures and enforces the lockout window.
+  Future<CryptoService?> verifyMasterPassword(String password) async {
+    final lockoutUntil = await _store.lockoutUntil;
+    if (lockoutUntil != null && DateTime.now().isBefore(lockoutUntil)) {
+      return null;
+    }
+    final salt = await _store.read(SecureStore.keySalt);
+    final verifier = await _store.read(SecureStore.keyMasterVerifier);
+    if (salt == null || verifier == null) return null;
+    final key = CryptoService.deriveKey(password, salt);
+    if (!_constantTimeEquals(masterPasswordVerifier(key), verifier)) {
+      final attempts = await _store.failedAttempts + 1;
+      await _store.setFailedAttempts(attempts);
+      if (attempts >= maxFailedAttempts) {
+        await _store.setLockoutUntil(DateTime.now().add(lockoutDuration));
+        await _store.setFailedAttempts(0);
+      }
+      return null;
+    }
+    await _store.setFailedAttempts(0);
+    await _store.setLockoutUntil(null);
+    _crypto = CryptoService(key);
+    return _crypto;
+  }
+
+  /// Compares two strings without leaking timing information.
+  bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return diff == 0;
+  }
+
+  /// Remaining lockout time, or null when not locked out.
+  Future<Duration?> lockoutRemaining() async {
+    final until = await _store.lockoutUntil;
+    if (until == null) return null;
+    final remaining = until.difference(DateTime.now());
+    if (remaining.isNegative) {
+      await _store.setLockoutUntil(null);
+      return null;
+    }
+    return remaining;
+  }
+
+  /// Number of consecutive failed attempts in the current window.
+  Future<int> get failedAttempts => _store.failedAttempts;
+
+  /// Attempts left before the lockout triggers.
+  Future<int> get attemptsLeft async {
+    final attempts = await failedAttempts;
+    final left = maxFailedAttempts - attempts;
+    return left < 0 ? 0 : left;
+  }
