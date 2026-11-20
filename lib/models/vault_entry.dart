@@ -6,6 +6,7 @@
 /// encrypted ciphertext ever touches the SQLite database.
 class VaultEntry {
   const VaultEntry({
+
     required this.id,
     required this.title,
     required this.username,
