@@ -51,3 +51,62 @@ void main() {
       expect(all.first.url, 'https://github.com');
       expect(all.first.category, 'Work');
     });
+
+    test('secrets are stored encrypted, never plaintext', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      final rows = await db.query(
+        VaultRepository.tableName,
+        where: 'id = ?',
+        whereArgs: <Object?>[entry.id],
+      );
+      expect(rows.length, 1);
+      final row = rows.first;
+      expect(row['username_enc'], isNot('octocat'));
+      expect(row['password_enc'], isNot('s3cret!'));
+      expect(row['notes_enc'], isNot('personal account'));
+      // Title stays plaintext for search.
+      expect(row['title'], 'GitHub');
+    });
+
+    test('getById returns the entry; unknown id returns null', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      final found = await repo.getById(entry.id);
+      expect(found?.title, 'GitHub');
+      expect(await repo.getById('no-such-id'), isNull);
+    });
+
+    test('update changes fields and refreshes updatedAt', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      final updated = entry.copyWith(
+        password: 'n3w-p@ss',
+        updatedAt: DateTime.now().add(const Duration(seconds: 5)),
+      );
+      await repo.update(updated);
+      final found = await repo.getById(entry.id);
+      expect(found?.password, 'n3w-p@ss');
+      expect(found?.username, 'octocat');
+      expect(
+        found!.updatedAt.isAfter(entry.updatedAt),
+        isTrue,
+      );
+    });
+
+    test('delete removes the entry', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      await repo.delete(entry.id);
+      expect(await repo.getAll(), isEmpty);
+      expect(await repo.count(), 0);
+    });
+
+    test('setFavorite toggles the star', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      await repo.setFavorite(entry, true);
+      expect((await repo.getById(entry.id))?.isFavorite, isTrue);
+      await repo.setFavorite(entry, false);
+      expect((await repo.getById(entry.id))?.isFavorite, isFalse);
+    });
