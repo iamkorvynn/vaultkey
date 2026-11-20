@@ -1,17 +1,23 @@
-# vaultkey
+# VaultKey — Offline Password Manager
 
-VaultKey - offline encrypted password manager
+**VaultKey** is a fully offline password manager for Android, built with
+Flutter. Everything stays on your device: no account, no cloud, no network
+calls, no tracking.
 
-## Getting Started
+- **Master password lock** — one strong password encrypts the whole vault.
+- **AES-256 encryption** — usernames, passwords and notes are encrypted
+  before they touch the database.
+- **Biometric unlock** — fingerprint / face unlock via the OS prompt.
+- **Password generator** — secure random passwords with strength meter.
+- **Search, categories & favorites** — find any login in seconds.
+- **Copy with auto-clear** — clipboard wipes itself 30 seconds after copying
+  a secret.
+- **Auto-lock** — vault locks after inactivity and when the app backgrounds.
 
-This project is a starting point for a Flutter application.
+## Status
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Version: **1.0.0** (versionCode 1)
+- Package: `dev.numaan.vaultkey`
+- Flutter 3.50.0 · Dart 3.14 · minSdk 21
+- Tests: `flutter test` — 54 tests, all passing
+- Lint: `flutter analyze` — no issues
