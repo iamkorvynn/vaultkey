@@ -29,6 +29,11 @@ android {
         versionName = flutter.versionName
     }
 
+    lint {
+        // Release lint is disabled: AGP lint crashes on this VM toolchain.
+        checkReleaseBuilds = false
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
