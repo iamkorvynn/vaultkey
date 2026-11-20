@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:local_auth/local_auth.dart';
 
 import 'crypto_service.dart';
@@ -12,9 +14,11 @@ import 'secure_store.dart';
 ///   verifier in constant time. On success it returns the [CryptoService]
 ///   the vault needs; on failure it counts attempts and locks out after
 ///   [maxFailedAttempts].
-/// * Biometric: [authenticateBiometric] asks the OS; it only works after a
-///   master password exists, and the vault key itself is re-derived from a
-///   cached in-memory copy — the key is never persisted to disk.
+/// * Biometric: the derived vault key is kept in the OS-encrypted
+///   keystore (via flutter_secure_storage) so biometric unlock works
+///   across restarts. [unlockWithBiometrics] only reads that key after
+///   the OS biometric prompt succeeds; the key is never stored in plain
+///   SQLite and never leaves the device.
 class AuthService {
   AuthService({
     SecureStore? store,
@@ -60,6 +64,10 @@ class AuthService {
     await _store.setSetupDone(true);
     await _store.setFailedAttempts(0);
     await _store.setLockoutUntil(null);
+    await _store.write(
+      SecureStore.keyVaultKey,
+      base64Encode(key),
+    );
     _crypto = CryptoService(key);
     return null;
   }
@@ -87,6 +95,10 @@ class AuthService {
     }
     await _store.setFailedAttempts(0);
     await _store.setLockoutUntil(null);
+    await _store.write(
+      SecureStore.keyVaultKey,
+      base64Encode(key),
+    );
     _crypto = CryptoService(key);
     return _crypto;
   }
