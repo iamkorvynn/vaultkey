@@ -25,3 +25,20 @@ VaultKey starts empty. Add your logins yourself — nothing is ever
 pre-filled, sampled or synced.
 
 Your passwords never leave your phone. That is the whole point.
+
+## What's new — 1.0.0
+- First release: offline encrypted vault, master password + biometric
+  unlock, password generator, search/categories/favorites, auto-lock,
+  clipboard auto-clear, change master password, erase vault.
+
+## Category
+Productivity
+
+## Tags
+password manager, offline, encrypted vault, password generator,
+biometric lock, privacy, no cloud
+
+## Privacy policy summary
+VaultKey collects no personal data. No account, no servers, no analytics,
+no ads, no third-party SDKs that transmit data. All data is stored
+encrypted on the user's device only.
