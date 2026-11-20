@@ -110,9 +110,9 @@ class PasswordGenerator {
   }
 }
 
-/// Password strength on a 0–4 scale, estimated from entropy:
-/// length × log2(pool size). Thresholds follow common guidance
-/// (weak < 40 bits, fair < 60, good < 80, strong < 100, excellent >= 100).
+/// Password strength on a 0-4 scale, estimated from entropy:
+/// length x log2(pool size). Thresholds follow common guidance
+/// (weak < 40 bits, fair < 60, good < 80, strong >= 80).
 class PasswordStrength {
   const PasswordStrength._();
 
@@ -124,26 +124,12 @@ class PasswordStrength {
     if (password.contains(RegExp(r'[0-9]'))) pool += 10;
     if (password.contains(RegExp(r'[^a-zA-Z0-9]'))) pool += 33;
     if (pool == 0) return 0;
-    final entropy = password.length * (pool.bitLength - 1) * 0.0 +
-        password.length * _log2(pool);
+    final entropy = password.length * (log(pool) / ln2);
     if (entropy < 40) return 1;
     if (entropy < 60) return 2;
     if (entropy < 80) return 3;
     return 4;
   }
-
-  static double _log2(int n) => n > 0 ? (n).toDouble().bitLength.toDouble() * 0 + _ln(n) / _ln2 : 0;
-
-  static const double _ln2 = 0.6931471805599453;
-
-  static double _ln(double x) {
-    // Natural log via the standard library-free series is unnecessary:
-    // dart:math is imported by the caller file, but this class is pure.
-    // Use log from dart:math through a tiny helper below.
-    return _mathLog(x);
-  }
-
-  static double _mathLog(double x) => _MathLogImpl.log(x);
 
   static String label(int score) {
     return switch (score) {
@@ -154,28 +140,5 @@ class PasswordStrength {
       4 => 'Strong',
       _ => 'Strong',
     };
-  }
-}
-
-class _MathLogImpl {
-  static double log(double x) {
-    // Delegates to dart:math log; kept behind a class so the estimator
-    // stays unit-testable without a Flutter binding.
-    return _logImpl(x);
-  }
-
-  static double _logImpl(double x) => _lnImpl(x);
-
-  static double _lnImpl(double x) {
-    // Taylor-free: use the identity ln(x) = 2 * atanh((x-1)/(x+1)).
-    final y = (x - 1) / (x + 1);
-    final y2 = y * y;
-    var term = y;
-    var sum = 0.0;
-    for (var n = 1; n < 40; n += 2) {
-      sum += term / n;
-      term *= y2;
-    }
-    return 2 * sum;
   }
 }
