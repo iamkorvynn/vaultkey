@@ -122,3 +122,72 @@ class AuthService {
     final left = maxFailedAttempts - attempts;
     return left < 0 ? 0 : left;
   }
+
+  /// Whether the device can do biometric auth at all.
+  Future<bool> get canUseBiometrics async {
+    try {
+      return await _localAuth.canCheckBiometrics;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the user enabled biometric unlock in settings.
+  Future<bool> get isBiometricEnabled => _store.isBiometricEnabled;
+
+  Future<void> setBiometricEnabled(bool value) =>
+      _store.setBiometricEnabled(value);
+
+  /// Runs the OS biometric prompt. Returns true when the user authenticated.
+  /// Biometric unlock only re-opens an already-derived session key — it
+  /// never derives the key itself, so it only works while the vault key
+  /// is still held in memory (same app session after a password unlock).
+  Future<bool> authenticateBiometric() async {
+    try {
+      final available = await canUseBiometrics;
+      if (!available) return false;
+      return await _localAuth.authenticate(
+        localizedReason: 'Unlock VaultKey with biometrics',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Changes the master password. Re-encrypts nothing in the database:
+  /// entries are re-encrypted by the caller-provided [reencrypt] callback,
+  /// which must rewrite every entry under the new key. Returns an error
+  /// string, or null on success.
+  Future<String?> changeMasterPassword(
+    String currentPassword,
+    String newPassword,
+    Future<void> Function(CryptoService oldCrypto, CryptoService newCrypto)
+        reencrypt,
+  ) async {
+    if (newPassword.length < minPasswordLength) {
+      return 'New password must be at least $minPasswordLength characters.';
+    }
+    final oldCrypto = await verifyMasterPassword(currentPassword);
+    if (oldCrypto == null) return 'Current password is incorrect.';
+    final salt = CryptoService.generateSalt();
+    final newKey = CryptoService.deriveKey(newPassword, salt);
+    final newCrypto = CryptoService(newKey);
+    await reencrypt(oldCrypto, newCrypto);
+    await _store.write(SecureStore.keySalt, salt);
+    await _store.write(
+      SecureStore.keyMasterVerifier,
+      masterPasswordVerifier(newKey),
+    );
+    _crypto = newCrypto;
+    return null;
+  }
+
+  /// Locks the vault: drops the in-memory key.
+  void lock() {
+    _crypto = null;
+  }
+}
