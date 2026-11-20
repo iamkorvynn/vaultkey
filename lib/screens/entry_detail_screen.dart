@@ -101,3 +101,138 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     if (!mounted) return;
     setState(() => _entry = updated);
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_entry.title),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _entry.isFavorite ? Icons.star : Icons.star_border,
+              color: _entry.isFavorite ? Colors.amber : null,
+            ),
+            tooltip: 'Favorite',
+            onPressed: _toggleFavorite,
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit',
+            onPressed: _edit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: 'Delete',
+            onPressed: _delete,
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _FieldRow(
+            label: 'Username',
+            value: _entry.username.isEmpty ? '—' : _entry.username,
+            onCopy: _entry.username.isEmpty
+                ? null
+                : () => _copy('Username', _entry.username),
+          ),
+          _FieldRow(
+            label: 'Password',
+            value: _passwordVisible ? _entry.password : '••••••••',
+            onCopy: () => _copy('Password', _entry.password, secret: true),
+            trailing: IconButton(
+              icon: Icon(
+                _passwordVisible ? Icons.visibility_off : Icons.visibility,
+              ),
+              tooltip: _passwordVisible ? 'Hide password' : 'Show password',
+              onPressed: () =>
+                  setState(() => _passwordVisible = !_passwordVisible),
+            ),
+          ),
+          _FieldRow(
+            label: 'URL',
+            value: _entry.url.isEmpty ? '—' : _entry.url,
+            onCopy: _entry.url.isEmpty
+                ? null
+                : () => _copy('URL', _entry.url),
+          ),
+          _FieldRow(
+            label: 'Category',
+            value: _entry.category,
+          ),
+          if (_entry.notes.isNotEmpty)
+            _FieldRow(
+              label: 'Notes',
+              value: _entry.notes,
+              onCopy: () => _copy('Notes', _entry.notes),
+            ),
+          const SizedBox(height: 16),
+          Text(
+            'Created ${_entry.createdAt.toLocal()}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Text(
+            'Last updated ${_entry.updatedAt.toLocal()}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One labeled field with an optional copy button.
+class _FieldRow extends StatelessWidget {
+  const _FieldRow({
+    required this.label,
+    required this.value,
+    this.onCopy,
+    this.trailing,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback? onCopy;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: SelectableText(
+                    value,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                if (trailing != null) trailing!,
+                if (onCopy != null)
+                  IconButton(
+                    icon: const Icon(Icons.copy),
+                    tooltip: 'Copy $label',
+                    onPressed: onCopy,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
