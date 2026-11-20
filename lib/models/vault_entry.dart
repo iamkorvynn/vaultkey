@@ -41,3 +41,28 @@ class VaultEntry {
       updatedAt: now,
     );
   }
+
+  /// Returns a copy with the given fields replaced.
+  VaultEntry copyWith({
+    String? title,
+    String? username,
+    String? password,
+    String? url,
+    String? notes,
+    String? category,
+    bool? isFavorite,
+    DateTime? updatedAt,
+  }) {
+    return VaultEntry(
+      id: id,
+      title: title ?? this.title,
+      username: username ?? this.username,
+      password: password ?? this.password,
+      url: url ?? this.url,
+      notes: notes ?? this.notes,
+      category: category ?? this.category,
+      isFavorite: isFavorite ?? this.isFavorite,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
