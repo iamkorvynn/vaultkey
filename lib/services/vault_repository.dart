@@ -105,3 +105,44 @@ class VaultRepository {
     if (rows.isEmpty) return null;
     return _decryptRow(rows.first);
   }
+
+  /// Inserts a new entry (encrypting its secrets first).
+  Future<void> insert(VaultEntry entry) async {
+    final db = await _db;
+    await db.insert(
+      tableName,
+      entry.toMap(
+        encryptedUsername: _cipher.encryptText(entry.username),
+        encryptedPassword: _cipher.encryptText(entry.password),
+        encryptedNotes: _cipher.encryptText(entry.notes),
+      ),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Updates an existing entry and refreshes its updated timestamp.
+  Future<void> update(VaultEntry entry) async {
+    final db = await _db;
+    final stamped = entry.copyWith(updatedAt: DateTime.now());
+    await db.update(
+      tableName,
+      stamped.toMap(
+        encryptedUsername: _cipher.encryptText(stamped.username),
+        encryptedPassword: _cipher.encryptText(stamped.password),
+        encryptedNotes: _cipher.encryptText(stamped.notes),
+      ),
+      where: 'id = ?',
+      whereArgs: <Object?>[entry.id],
+    );
+  }
+
+  /// Deletes the entry with [id].
+  Future<void> delete(String id) async {
+    final db = await _db;
+    await db.delete(tableName, where: 'id = ?', whereArgs: <Object?>[id]);
+  }
+
+  /// Toggles the favorite flag for [entry].
+  Future<void> setFavorite(VaultEntry entry, bool favorite) async {
+    await update(entry.copyWith(isFavorite: favorite));
+  }
