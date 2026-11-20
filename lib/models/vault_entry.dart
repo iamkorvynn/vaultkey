@@ -66,3 +66,61 @@ class VaultEntry {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  /// Serializes the entry for SQLite. The [username], [password] and
+  /// [notes] values passed here must already be encrypted ciphertext —
+  /// this class never sees the encryption key.
+  Map<String, Object?> toMap({
+    required String encryptedUsername,
+    required String encryptedPassword,
+    required String encryptedNotes,
+  }) {
+    return <String, Object?>{
+      'id': id,
+      'title': title,
+      'username_enc': encryptedUsername,
+      'password_enc': encryptedPassword,
+      'url': url,
+      'notes_enc': encryptedNotes,
+      'category': category,
+      'favorite': isFavorite ? 1 : 0,
+      'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': updatedAt.millisecondsSinceEpoch,
+    };
+  }
+
+  /// Builds a decrypted entry from a database row. The encrypted columns
+  /// must already have been decrypted by the caller.
+  factory VaultEntry.fromDecryptedMap(
+    Map<String, Object?> row, {
+    required String username,
+    required String password,
+    required String notes,
+  }) {
+    return VaultEntry(
+      id: row['id'] as String,
+      title: row['title'] as String,
+      username: username,
+      password: password,
+      url: (row['url'] as String?) ?? '',
+      notes: notes,
+      category: (row['category'] as String?) ?? 'Other',
+      isFavorite: (row['favorite'] as int? ?? 0) == 1,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(row['updated_at'] as int),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is VaultEntry &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'VaultEntry(id: $id, title: $title, category: $category)';
+}
