@@ -110,3 +110,62 @@ void main() {
       await repo.setFavorite(entry, false);
       expect((await repo.getById(entry.id))?.isFavorite, isFalse);
     });
+
+    test('search matches title, username and url (case-insensitive)', () async {
+      await repo.insert(sampleEntry(title: 'GitHub'));
+      await repo.insert(sampleEntry(title: 'Gmail'));
+      await repo.insert(sampleEntry(title: 'Bank App'));
+
+      final byTitle = await repo.search('git');
+      expect(byTitle.map((e) => e.title), ['GitHub']);
+
+      final byUser = await repo.search('OCTOCAT');
+      expect(byUser.length, 3);
+
+      final byUrl = await repo.search('github.com');
+      expect(byUrl.map((e) => e.title), ['GitHub']);
+
+      final empty = await repo.search('');
+      expect(empty.length, 3);
+
+      final none = await repo.search('zzz-no-match');
+      expect(none, isEmpty);
+    });
+
+    test('byCategory filters correctly', () async {
+      await repo.insert(sampleEntry(title: 'GitHub'));
+      final other = VaultEntry.create(
+        title: 'Netflix',
+        username: 'me',
+        password: 'pw',
+        url: '',
+        notes: '',
+        category: 'Social',
+      );
+      await repo.insert(other);
+      final work = await repo.byCategory('Work');
+      expect(work.map((e) => e.title), ['GitHub']);
+      final all = await repo.byCategory(null);
+      expect(all.length, 2);
+    });
+
+    test('deleteAll empties the vault', () async {
+      await repo.insert(sampleEntry(title: 'A'));
+      await repo.insert(sampleEntry(title: 'B'));
+      await repo.deleteAll();
+      expect(await repo.count(), 0);
+    });
+
+    test('entries encrypted under another key are skipped, not fatal', () async {
+      final entry = sampleEntry();
+      await repo.insert(entry);
+      // Re-open the same rows with a different key.
+      final otherCrypto = CryptoService(
+        CryptoService.deriveKey('different-master', 'salt'),
+      );
+      final otherRepo = VaultRepository(database: db, crypto: otherCrypto);
+      expect(await otherRepo.getAll(), isEmpty);
+      expect(await otherRepo.count(), 1);
+    });
+  });
+}
