@@ -62,3 +62,46 @@ class VaultRepository {
     _database = opened;
     return opened;
   }
+
+  /// Decrypts one raw database row into a [VaultEntry].
+  /// Rows that fail to decrypt are skipped by callers (never crash the list).
+  VaultEntry? _decryptRow(Map<String, Object?> row) {
+    final username = _cipher.decryptText(row['username_enc'] as String);
+    final password = _cipher.decryptText(row['password_enc'] as String);
+    final notes = _cipher.decryptText(row['notes_enc'] as String? ?? '');
+    if (username == null || password == null || notes == null) return null;
+    return VaultEntry.fromDecryptedMap(
+      row,
+      username: username,
+      password: password,
+      notes: notes,
+    );
+  }
+
+  /// Returns every entry, newest first.
+  Future<List<VaultEntry>> getAll() async {
+    final db = await _db;
+    final rows = await db.query(
+      tableName,
+      orderBy: 'updated_at DESC',
+    );
+    final entries = <VaultEntry>[];
+    for (final row in rows) {
+      final entry = _decryptRow(row);
+      if (entry != null) entries.add(entry);
+    }
+    return entries;
+  }
+
+  /// Returns the entry with [id], or null when it does not exist.
+  Future<VaultEntry?> getById(String id) async {
+    final db = await _db;
+    final rows = await db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: <Object?>[id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _decryptRow(rows.first);
+  }
