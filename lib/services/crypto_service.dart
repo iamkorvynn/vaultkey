@@ -44,7 +44,10 @@ class CryptoService {
 
   /// Encrypts [plainText] with a fresh random IV.
   /// Returns `base64(iv):base64(ciphertext)`.
+  /// Empty strings are stored as-is (there is nothing to encrypt, and
+  /// the `encrypt` package throws on empty input).
   String encryptText(String plainText) {
+    if (plainText.isEmpty) return '';
     final iv = enc.IV.fromSecureRandom(16);
     final encrypted = _encrypter.encrypt(plainText, iv: iv);
     return '${iv.base64}:${encrypted.base64}';
@@ -53,6 +56,7 @@ class CryptoService {
   /// Decrypts a value produced by [encryptText].
   /// Returns null when the payload is malformed or the key is wrong.
   String? decryptText(String cipherText) {
+    if (cipherText.isEmpty) return '';
     try {
       final parts = cipherText.split(':');
       if (parts.length != 2) return null;
