@@ -48,7 +48,7 @@ void main() {
       expect(all.first.username, 'octocat');
       expect(all.first.password, 's3cret!');
       expect(all.first.notes, 'personal account');
-      expect(all.first.url, 'https://github.com');
+      expect(all.first.url, 'https://github.example.com');
       expect(all.first.category, 'Work');
     });
 

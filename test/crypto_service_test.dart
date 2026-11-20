@@ -84,7 +84,11 @@ void main() {
     test('malformed ciphertext returns null instead of throwing', () {
       expect(crypto.decryptText('not-a-cipher'), isNull);
       expect(crypto.decryptText('a:b:c'), isNull);
-      expect(crypto.decryptText(''), isNull);
+      expect(crypto.decryptText(':::') , isNull);
+    });
+
+    test('empty ciphertext decrypts to empty string (pass-through)', () {
+      expect(crypto.decryptText(''), '');
     });
 
     test('master password verifier matches for the right key only', () {
