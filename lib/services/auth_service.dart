@@ -150,10 +150,26 @@ class AuthService {
   Future<void> setBiometricEnabled(bool value) =>
       _store.setBiometricEnabled(value);
 
+  /// Unlocks the vault with biometrics: runs the OS prompt, then reads
+  /// the vault key from the OS keystore. Returns the [CryptoService] on
+  /// success, null when biometrics are off, unavailable, or fail.
+  Future<CryptoService?> unlockWithBiometrics() async {
+    final enabled = await isBiometricEnabled;
+    if (!enabled) return null;
+    final ok = await authenticateBiometric();
+    if (!ok) return null;
+    final stored = await _store.read(SecureStore.keyVaultKey);
+    if (stored == null || stored.isEmpty) return null;
+    try {
+      final key = base64Decode(stored);
+      _crypto = CryptoService(key);
+      return _crypto;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Runs the OS biometric prompt. Returns true when the user authenticated.
-  /// Biometric unlock only re-opens an already-derived session key — it
-  /// never derives the key itself, so it only works while the vault key
-  /// is still held in memory (same app session after a password unlock).
   Future<bool> authenticateBiometric() async {
     try {
       final available = await canUseBiometrics;
@@ -193,6 +209,10 @@ class AuthService {
     await _store.write(
       SecureStore.keyMasterVerifier,
       masterPasswordVerifier(newKey),
+    );
+    await _store.write(
+      SecureStore.keyVaultKey,
+      base64Encode(newKey),
     );
     _crypto = newCrypto;
     return null;
