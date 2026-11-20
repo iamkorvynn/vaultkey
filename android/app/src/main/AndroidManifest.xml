@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- VaultKey is fully offline: INTERNET is declared only for the
+         platform-level permission check; the app makes no network calls. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
     <application
         android:label="vaultkey"
         android:name="${applicationName}"
