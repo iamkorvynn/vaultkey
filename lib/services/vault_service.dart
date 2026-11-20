@@ -44,3 +44,49 @@ class VaultService {
     _repository = null;
     _auth.lock();
   }
+
+  /// Re-encrypts every entry from [oldCrypto] to [newCrypto].
+  /// Used by [AuthService.changeMasterPassword].
+  Future<void> reencryptAll(
+    CryptoService oldCrypto,
+    CryptoService newCrypto,
+  ) async {
+    final oldRepo = VaultRepository(crypto: oldCrypto);
+    final newRepo = VaultRepository(crypto: newCrypto);
+    final entries = await oldRepo.getAll();
+    for (final entry in entries) {
+      await newRepo.update(entry);
+    }
+    await oldRepo.close();
+    await newRepo.close();
+  }
+
+  /// Changes the master password and re-encrypts the whole vault.
+  /// Returns an error string, or null on success.
+  Future<String?> changeMasterPassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final error = await _auth.changeMasterPassword(
+      currentPassword,
+      newPassword,
+      reencryptAll,
+    );
+    if (error != null) return error;
+    // Rebind the repository to the new key.
+    _repository = VaultRepository(crypto: _auth.crypto);
+    return null;
+  }
+
+  /// Erases the entire vault: all entries, all secure-storage keys.
+  /// The app returns to the first-run setup flow afterwards.
+  Future<void> eraseVault() async {
+    final repo = _repository;
+    if (repo != null) {
+      await repo.deleteAll();
+      await repo.close();
+    }
+    _repository = null;
+    _auth.lock();
+  }
+}
