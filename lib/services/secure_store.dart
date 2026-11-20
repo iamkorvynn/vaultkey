@@ -32,3 +32,56 @@ class SecureStore {
   /// Wipes every VaultKey key from secure storage (used by "erase vault").
   Future<void> deleteAll() => _storage.deleteAll();
 }
+
+/// Convenience accessors for the settings VaultKey stores securely.
+extension SecureStoreSettings on SecureStore {
+  Future<bool> get isSetupDone async =>
+      (await read(SecureStore.keySetupDone)) == 'true';
+
+  Future<void> setSetupDone(bool value) =>
+      write(SecureStore.keySetupDone, value ? 'true' : 'false');
+
+  Future<bool> get isBiometricEnabled async =>
+      (await read(SecureStore.keyBiometricEnabled)) == 'true';
+
+  Future<void> setBiometricEnabled(bool value) =>
+      write(SecureStore.keyBiometricEnabled, value ? 'true' : 'false');
+
+  /// Auto-lock delay in minutes. Defaults to 2 when unset.
+  Future<int> get autoLockMinutes async {
+    final raw = await read(SecureStore.keyAutoLockMinutes);
+    final parsed = int.tryParse(raw ?? '');
+    if (parsed == null || parsed <= 0) return 2;
+    return parsed;
+  }
+
+  Future<void> setAutoLockMinutes(int minutes) =>
+      write(SecureStore.keyAutoLockMinutes, minutes.toString());
+
+  Future<int> get failedAttempts async {
+    final raw = await read(SecureStore.keyFailedAttempts);
+    return int.tryParse(raw ?? '') ?? 0;
+  }
+
+  Future<void> setFailedAttempts(int value) =>
+      write(SecureStore.keyFailedAttempts, value.toString());
+
+  Future<DateTime?> get lockoutUntil async {
+    final raw = await read(SecureStore.keyLockoutUntil);
+    if (raw == null || raw.isEmpty) return null;
+    final millis = int.tryParse(raw);
+    if (millis == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  Future<void> setLockoutUntil(DateTime? value) async {
+    if (value == null) {
+      await delete(SecureStore.keyLockoutUntil);
+    } else {
+      await write(
+        SecureStore.keyLockoutUntil,
+        value.millisecondsSinceEpoch.toString(),
+      );
+    }
+  }
+}
