@@ -40,3 +40,40 @@ class CryptoService {
     final bytes = List<int>.generate(32, (_) => random.nextInt(256));
     return base64Encode(bytes);
   }
+
+  /// Encrypts [plainText] with a fresh random IV.
+  /// Returns `base64(iv):base64(ciphertext)`.
+  String encryptText(String plainText) {
+    final iv = enc.IV.fromSecureRandom(16);
+    final encrypted = _encrypter.encrypt(plainText, iv: iv);
+    return '${iv.base64}:${encrypted.base64}';
+  }
+
+  /// Decrypts a value produced by [encryptText].
+  /// Returns null when the payload is malformed or the key is wrong.
+  String? decryptText(String cipherText) {
+    try {
+      final parts = cipherText.split(':');
+      if (parts.length != 2) return null;
+      final iv = enc.IV.fromBase64(parts[0]);
+      final encrypted = enc.Encrypted.fromBase64(parts[1]);
+      return _encrypter.decrypt(encrypted, iv: iv);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Returns true when [cipherText] looks like a value [encryptText]
+  /// produced (two base64 segments separated by a colon).
+  static bool looksEncrypted(String cipherText) {
+    final parts = cipherText.split(':');
+    return parts.length == 2 && parts[0].isNotEmpty && parts[1].isNotEmpty;
+  }
+}
+
+/// Computes the stored verifier for a master password: SHA-256 of the
+/// derived key, hex-encoded. The verifier lets us check a password without
+/// storing anything that can decrypt the vault on its own.
+String masterPasswordVerifier(List<int> keyBytes) {
+  return sha256.convert(keyBytes).toString();
+}
