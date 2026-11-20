@@ -74,3 +74,46 @@ void main() {
       expect(a, isNot(equals(b)));
     });
   });
+
+  group('PasswordStrength', () {
+    test('empty password scores 0 / Empty', () {
+      expect(PasswordStrength.score(''), 0);
+      expect(PasswordStrength.label(0), 'Empty');
+    });
+
+    test('short lowercase-only password is weak', () {
+      expect(PasswordStrength.score('abc'), 1);
+      expect(PasswordStrength.label(1), 'Weak');
+    });
+
+    test('strength grows with length and charset variety', () {
+      final weak = PasswordStrength.score('password');
+      final medium = PasswordStrength.score('Password1');
+      final strong = PasswordStrength.score('P@ssw0rd!2026#Secure');
+      expect(weak, lessThan(medium));
+      expect(medium, lessThanOrEqualTo(strong));
+      expect(strong, 4);
+      expect(PasswordStrength.label(4), 'Strong');
+    });
+
+    test('long mixed password scores 4', () {
+      expect(PasswordStrength.score('Tr0ub4dor&3xK9!mQw'), 4);
+    });
+
+    test('labels cover every score 0-4', () {
+      expect(PasswordStrength.label(2), 'Fair');
+      expect(PasswordStrength.label(3), 'Good');
+    });
+  });
+
+  group('GeneratorOptions', () {
+    test('copyWith replaces only given fields', () {
+      const base = GeneratorOptions(length: 16);
+      final next = base.copyWith(length: 24, includeSymbols: false);
+      expect(next.length, 24);
+      expect(next.includeSymbols, isFalse);
+      expect(next.includeDigits, isTrue);
+      expect(next.includeUppercase, isTrue);
+    });
+  });
+}
