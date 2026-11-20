@@ -27,3 +27,20 @@
 - **Weak master passwords** — the strength meter warns, but a short or
   guessable master password undermines everything. Minimum 8 characters
   is enforced; longer is strongly recommended.
+
+## Deliberate trade-offs
+
+- **Titles/URLs in plaintext** — needed for search and list rendering
+  without decrypting every row on each keystroke. The alternative (decrypt
+  everything into memory) would leak more, not less.
+- **Key in the keystore for biometrics** — without it, biometric unlock
+  could not work across restarts. The keystore is hardware-backed on most
+  modern devices; the trade-off is documented, and biometrics are off by
+  default.
+- **No export / no sync in v1** — every export format is a new exfiltration
+  path. v1 keeps the vault strictly on-device.
+
+## Reporting a vulnerability
+
+Open an issue on the GitHub repo with steps to reproduce. Do not include
+any real vault data. The maintainer will acknowledge within a week.
