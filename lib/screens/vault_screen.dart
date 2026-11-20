@@ -173,3 +173,182 @@ class _VaultScreenState extends State<VaultScreen>
     await _armAutoLock();
     await _loadEntries();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final favoritesCount = _entries.where((e) => e.isFavorite).length;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('VaultKey'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lock),
+            tooltip: 'Lock vault',
+            onPressed: () => _lockManager.lock(),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(Icons.lock_outline, size: 40),
+                  SizedBox(height: 8),
+                  Text(
+                    'VaultKey',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text('Offline password manager'),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.key),
+              title: const Text('Password generator'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openGenerator();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openSettings();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.lock),
+              title: const Text('Lock vault now'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _lockManager.lock();
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search title, username or URL',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => _applyFilter(),
+            ),
+          ),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: [
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _selectedCategory == null && !_favoritesOnly,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedCategory = null;
+                      _favoritesOnly = false;
+                    });
+                    _applyFilter();
+                  },
+                ),
+                const SizedBox(width: 6),
+                FilterChip(
+                  label: Text('Favorites ($favoritesCount)'),
+                  selected: _favoritesOnly,
+                  onSelected: (selected) {
+                    setState(() => _favoritesOnly = selected);
+                    _applyFilter();
+                  },
+                ),
+                for (final category in VaultCategory.all) ...[
+                  const SizedBox(width: 6),
+                  FilterChip(
+                    label: Text(category),
+                    selected: _selectedCategory == category,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = selected ? category : null;
+                        _favoritesOnly = false;
+                      });
+                      _applyFilter();
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(child: _buildList()),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAdd,
+        tooltip: 'Add entry',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildList() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_entries.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.vpn_key_outlined, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'Your vault is empty',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Tap + to add your first login. Everything is encrypted '
+                'on this device — nothing leaves it.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_filtered.isEmpty) {
+      return const Center(
+        child: Text('No entries match your search or filter.'),
+      );
+    }
+    return ListView.builder(
+      itemCount: _filtered.length,
+      itemBuilder: (context, index) {
+        final entry = _filtered[index];
+        return EntryTile(
+          entry: entry,
+          onTap: () => _openDetail(entry),
+          onToggleFavorite: () => _toggleFavorite(entry),
+          onCopyPassword: () => _copyPassword(entry),
+        );
+      },
+    );
+  }
+}
