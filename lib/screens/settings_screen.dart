@@ -181,3 +181,112 @@ class _SettingsScreenState extends State<SettingsScreen> {
       (_) => false,
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'SECURITY',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Auto-lock after'),
+                  subtitle: Text('$_autoLockMinutes minute(s) of inactivity'),
+                  trailing: DropdownButton<int>(
+                    value: _autoLockMinutes,
+                    items: autoLockChoices
+                        .map(
+                          (m) => DropdownMenuItem<int>(
+                            value: m,
+                            child: Text('$m min'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) _setAutoLock(value);
+                    },
+                  ),
+                ),
+                SwitchListTile(
+                  title: const Text('Biometric unlock'),
+                  subtitle: Text(
+                    _biometricAvailable
+                        ? 'Unlock with fingerprint / face'
+                        : 'Not available on this device',
+                  ),
+                  value: _biometricEnabled,
+                  onChanged:
+                      _biometricAvailable ? _setBiometric : null,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.password),
+                  title: const Text('Change master password'),
+                  subtitle: const Text('Re-encrypts the whole vault'),
+                  onTap: _changeMasterPassword,
+                ),
+                const Divider(),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    'VAULT',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.storage),
+                  title: const Text('Entries stored'),
+                  subtitle: Text('$_entryCount entr${_entryCount == 1 ? 'y' : 'ies'} on this device'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud_off),
+                  title: const Text('Fully offline'),
+                  subtitle: const Text(
+                    'No account, no cloud, no network calls. '
+                    'Your data never leaves this device.',
+                  ),
+                ),
+                const Divider(),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    'DANGER ZONE',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_forever, color: Colors.red),
+                  title: const Text(
+                    'Erase vault',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  subtitle: const Text(
+                    'Delete all entries and the master password. No recovery.',
+                  ),
+                  onTap: _eraseVault,
+                ),
+                const SizedBox(height: 16),
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'VaultKey 1.0.0 — offline password manager.\n'
+                    'Encryption: AES-256-CBC, key stretched with 10,000 '
+                    'SHA-256 rounds over your master password + device salt.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
