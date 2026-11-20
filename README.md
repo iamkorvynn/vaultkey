@@ -37,3 +37,41 @@ calls, no tracking.
 
 **No recovery:** if you forget the master password, the vault cannot be
 opened — by design. There is no backdoor, no reset link, no cloud copy.
+
+## Screens
+
+- **Setup** — first-run master password creation with live strength meter.
+- **Lock** — master password unlock, biometric button, attempts-left counter.
+- **Vault** — entry list with search, category chips, favorites filter,
+  per-entry copy + favorite, add button.
+- **Entry detail** — reveal/hide password, copy username/password/URL/notes,
+  edit, delete.
+- **Entry editor** — title, username, password (with one-tap generator and
+  strength meter), URL, category, notes.
+- **Generator** — length slider (8–64), uppercase / lowercase / digits /
+  symbols toggles, exclude-ambiguous option, regenerate + copy.
+- **Settings** — auto-lock timeout, biometric toggle, change master password
+  (re-encrypts the whole vault), vault stats, erase vault.
+
+## Build
+
+```bash
+# Toolchain
+export PATH=~/workspace/flutter-sdk/flutter/bin:$PATH
+export ANDROID_HOME=~/workspace/android-sdk
+export JAVA_HOME=~/workspace/android-sdk/jdk17
+export JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true"
+export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true"
+export CI=true
+
+flutter pub get
+flutter analyze   # expect: No issues found!
+flutter test      # expect: All tests passed!
+
+# Release APK (parent builds this sequentially; VM RAM constraint)
+# flutter build apk --release
+```
+
+Gradle is tuned for a low-RAM VM: 1.5 GB heap, daemon off, 2 workers
+(`android/gradle.properties`). Release lint is disabled in
+`android/app/build.gradle.kts` (AGP lint crashes on this toolchain).
