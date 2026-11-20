@@ -221,7 +221,7 @@ class _FieldRow extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
-                if (trailing != null) trailing!,
+                trailing ?? const SizedBox.shrink(),
                 if (onCopy != null)
                   IconButton(
                     icon: const Icon(Icons.copy),

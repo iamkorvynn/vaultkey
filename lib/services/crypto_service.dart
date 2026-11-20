@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as enc;
@@ -23,7 +24,7 @@ class CryptoService {
   final List<int> _keyBytes;
 
   enc.Encrypter get _encrypter =>
-      enc.Encrypter(enc.AES(enc.Key(_keyBytes), mode: enc.AESMode.cbc));
+      enc.Encrypter(enc.AES(enc.Key(Uint8List.fromList(_keyBytes)), mode: enc.AESMode.cbc));
 
   /// Derives a 32-byte AES key from [password] and a per-device [salt].
   static List<int> deriveKey(String password, String salt) {

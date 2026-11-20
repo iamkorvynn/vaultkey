@@ -10,16 +10,17 @@ import 'crypto_service.dart';
 /// objects and always get decrypted entries back. Only ciphertext is
 /// written to disk — see [VaultEntry] for which columns are encrypted.
 class VaultRepository {
-  VaultRepository({Database? database, CryptoService? crypto})
-      : _database = database,
-        _crypto = crypto;
+  VaultRepository({Database? database, CryptoService? crypto}) {
+    _database = database;
+    _crypto = crypto;
+  }
 
   static const String tableName = 'entries';
   static const String databaseName = 'vaultkey.db';
   static const int databaseVersion = 1;
 
   Database? _database;
-  final CryptoService? _crypto;
+  CryptoService? _crypto;
 
   CryptoService get _cipher {
     final crypto = _crypto;

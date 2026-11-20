@@ -1,4 +1,3 @@
-import '../models/vault_entry.dart';
 import 'auth_service.dart';
 import 'crypto_service.dart';
 import 'vault_repository.dart';
