@@ -47,7 +47,7 @@ void main() {
         setData: (data) async {
           written.add(data.text);
         },
-        timerFactory: (_, __) {
+        timerFactory: (_, _) {
           timerCalls++;
           return Timer(const Duration(days: 1), () {});
         },
