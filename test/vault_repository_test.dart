@@ -22,12 +22,12 @@ void main() {
     await db.close();
   });
 
-  VaultEntry sampleEntry({String title = 'GitHub'}) {
+  VaultEntry sampleEntry({String title = 'GitHub', String? url}) {
     return VaultEntry.create(
       title: title,
       username: 'octocat',
       password: 's3cret!',
-      url: 'https://github.com',
+      url: url ?? 'https://${title.toLowerCase().replaceAll(' ', '')}.example.com',
       notes: 'personal account',
       category: 'Work',
     );
@@ -112,9 +112,15 @@ void main() {
     });
 
     test('search matches title, username and url (case-insensitive)', () async {
-      await repo.insert(sampleEntry(title: 'GitHub'));
-      await repo.insert(sampleEntry(title: 'Gmail'));
-      await repo.insert(sampleEntry(title: 'Bank App'));
+      await repo.insert(
+        sampleEntry(title: 'GitHub', url: 'https://github.com'),
+      );
+      await repo.insert(
+        sampleEntry(title: 'Gmail', url: 'https://mail.google.com'),
+      );
+      await repo.insert(
+        sampleEntry(title: 'Bank App', url: 'https://bank.example.com'),
+      );
 
       final byTitle = await repo.search('git');
       expect(byTitle.map((e) => e.title), ['GitHub']);
