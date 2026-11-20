@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vaultkey/services/clipboard_service.dart';
 
@@ -12,7 +11,7 @@ void main() {
         setData: (data) async {
           written.add(data.text);
         },
-        timerFactory: (_, __) => Timer(const Duration(days: 1), () {}),
+        timerFactory: (_, _) => Timer(const Duration(days: 1), () {}),
       );
       await service.copySecret('hunter2');
       expect(written, ['hunter2']);
@@ -65,7 +64,7 @@ void main() {
         setData: (data) async {
           written.add(data.text);
         },
-        timerFactory: (_, __) => Timer(const Duration(days: 1), () {}),
+        timerFactory: (_, _) => Timer(const Duration(days: 1), () {}),
       );
       await service.copySecret('hunter2');
       await service.clearNow();
