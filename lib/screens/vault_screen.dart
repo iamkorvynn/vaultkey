@@ -83,3 +83,93 @@ class _VaultScreenState extends State<VaultScreen>
     _lockManager.dispose();
     super.dispose();
   }
+
+  Future<void> _loadEntries() async {
+    setState(() => _loading = true);
+    final entries = await widget.vaultService.repository.getAll();
+    if (!mounted) return;
+    setState(() {
+      _entries = entries;
+      _loading = false;
+    });
+    _applyFilter();
+  }
+
+  void _applyFilter() {
+    final query = _searchController.text.trim().toLowerCase();
+    var list = _entries;
+    if (_selectedCategory != null) {
+      list = list.where((e) => e.category == _selectedCategory).toList();
+    }
+    if (_favoritesOnly) {
+      list = list.where((e) => e.isFavorite).toList();
+    }
+    if (query.isNotEmpty) {
+      list = list.where((e) {
+        return e.title.toLowerCase().contains(query) ||
+            e.username.toLowerCase().contains(query) ||
+            e.url.toLowerCase().contains(query);
+      }).toList();
+    }
+    setState(() => _filtered = list);
+  }
+
+  Future<void> _copyPassword(VaultEntry entry) async {
+    await _clipboard.copySecret(entry.password);
+    _lockManager.poke();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Password copied — clipboard clears in 30 seconds.'),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(VaultEntry entry) async {
+    await widget.vaultService.repository.setFavorite(entry, !entry.isFavorite);
+    _lockManager.poke();
+    await _loadEntries();
+  }
+
+  Future<void> _openDetail(VaultEntry entry) async {
+    _lockManager.poke();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EntryDetailScreen(
+          vaultService: widget.vaultService,
+          entry: entry,
+        ),
+      ),
+    );
+    await _loadEntries();
+  }
+
+  Future<void> _openAdd() async {
+    _lockManager.poke();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EntryEditScreen(vaultService: widget.vaultService),
+      ),
+    );
+    await _loadEntries();
+  }
+
+  Future<void> _openGenerator() async {
+    _lockManager.poke();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const GeneratorScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openSettings() async {
+    _lockManager.poke();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(vaultService: widget.vaultService),
+      ),
+    );
+    await _armAutoLock();
+    await _loadEntries();
+  }
