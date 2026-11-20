@@ -120,3 +120,21 @@ VaultKey collects nothing. There is no analytics, no crash reporting, no
 account, no server. The only data on the device is your encrypted vault
 (`vaultkey.db` in the app's private storage) and a handful of keys in the
 OS keystore. Uninstalling the app deletes everything.
+
+## FAQ
+
+**Is my data backed up anywhere?**
+No. VaultKey has no account and no cloud. If you lose the device and the
+master password, the vault is gone. Export is intentionally not in v1.
+
+**What if I forget my master password?**
+The vault cannot be opened — there is no recovery. Pick a master password
+you will remember, and consider writing it down somewhere safe offline.
+
+**Does VaultKey need the internet?**
+No. It makes zero network calls. The INTERNET permission exists only
+because the platform expects it to be declared.
+
+**Can I use it without biometrics?**
+Yes. Biometrics are optional and off by default. The master password
+always works.
