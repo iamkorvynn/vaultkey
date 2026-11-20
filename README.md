@@ -75,3 +75,48 @@ flutter test      # expect: All tests passed!
 Gradle is tuned for a low-RAM VM: 1.5 GB heap, daemon off, 2 workers
 (`android/gradle.properties`). Release lint is disabled in
 `android/app/build.gradle.kts` (AGP lint crashes on this toolchain).
+
+## Project structure
+
+```
+lib/
+  main.dart                  App entry + setup/lock/vault gate
+  models/
+    vault_entry.dart         Entry model + SQLite mapping
+    category.dart            Built-in categories
+  services/
+    crypto_service.dart      AES-256-CBC + key derivation (10k SHA-256 rounds)
+    secure_store.dart        OS keystore wrapper (flutter_secure_storage)
+    auth_service.dart        Master password, lockout, biometric unlock
+    vault_repository.dart    SQLite CRUD, encrypt-on-write
+    vault_service.dart       Orchestrates auth + repository + re-encryption
+    password_generator.dart  Secure generator + entropy strength estimator
+    lock_manager.dart        Pure-Dart lock state machine + auto-lock timer
+    clipboard_service.dart   Copy secrets with 30s auto-clear
+  screens/
+    setup_screen.dart        First-run master password creation
+    lock_screen.dart         Unlock + biometric
+    vault_screen.dart        List, search, filters, auto-lock
+    entry_detail_screen.dart View / reveal / copy / delete
+    entry_edit_screen.dart   Add / edit form + inline generator
+    generator_screen.dart    Standalone generator
+    settings_screen.dart     Auto-lock, biometric, change password, erase
+  widgets/
+    entry_tile.dart          Vault list row
+    password_strength_meter.dart  4-segment strength bar
+
+test/
+  crypto_service_test.dart   Key derivation + AES round-trip
+  password_generator_test.dart  Generation rules + strength
+  vault_repository_test.dart    CRUD + encryption-at-rest (sqflite ffi)
+  lock_manager_test.dart     Lock states + auto-lock timer
+  vault_entry_test.dart      Model mapping + categories
+  widget_test.dart           Setup gate + generator screen
+```
+
+## Privacy
+
+VaultKey collects nothing. There is no analytics, no crash reporting, no
+account, no server. The only data on the device is your encrypted vault
+(`vaultkey.db` in the app's private storage) and a handful of keys in the
+OS keystore. Uninstalling the app deletes everything.
