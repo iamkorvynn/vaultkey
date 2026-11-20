@@ -15,6 +15,7 @@ class SecureStore {
   final FlutterSecureStorage _storage;
 
   static const String keySalt = 'vk_salt';
+  static const String keyVaultKey = 'vk_vault_key';
   static const String keyMasterVerifier = 'vk_master_verifier';
   static const String keySetupDone = 'vk_setup_done';
   static const String keyBiometricEnabled = 'vk_biometric_enabled';
