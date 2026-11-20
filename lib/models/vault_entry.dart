@@ -5,8 +5,37 @@
 /// [username], [password] and [notes] are stored AES-encrypted; only the
 /// encrypted ciphertext ever touches the SQLite database.
 class VaultEntry {
-  const VaultEntry({
+  /// Unique id (microsecond timestamp at creation).
+  final String id;
 
+  /// Site/app name — stored in plain text for search.
+  final String title;
+
+  /// Username — stored AES-encrypted in the database.
+  final String username;
+
+  /// Password — stored AES-encrypted in the database.
+  final String password;
+
+  /// URL — stored in plain text for search.
+  final String url;
+
+  /// Notes — stored AES-encrypted in the database.
+  final String notes;
+
+  /// One of [VaultCategory.all].
+  final String category;
+
+  /// Starred by the user.
+  final bool isFavorite;
+
+  /// Creation time.
+  final DateTime createdAt;
+
+  /// Last edit time.
+  final DateTime updatedAt;
+
+  const VaultEntry({
     required this.id,
     required this.title,
     required this.username,
